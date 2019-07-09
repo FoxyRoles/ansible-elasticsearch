@@ -1,0 +1,12 @@
+---
+
+- name: Ensure JVM options are set
+  lineinfile:
+    path: /etc/elasticsearch/jvm.options
+    regexp: "^\\-{{ item.key }}"
+    line: "-{{ item.value }}"
+  with_dict:
+   - "{{ elasticsearch_jvm_options }}"
+  when: elasticsearch_jvm_options is defined
+  notify:
+   - restart elasticsearch

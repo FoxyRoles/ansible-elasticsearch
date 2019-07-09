@@ -1,0 +1,13 @@
+---
+
+- name: elasticsearch package present
+  apt:
+    name: "elasticsearch"
+    state: present
+
+- name: elasticsearch service started and enabled
+  systemd:
+    name: elasticsearch
+    daemon_reload: yes
+    state: started
+    enabled: yes
