@@ -1,4 +1,4 @@
-# ansible-composer
+# ansible-elasticsearch
 
 Setups ElasticSearch.
 
@@ -8,10 +8,10 @@ Setups ElasticSearch.
 - hosts: myserver
   roles:
     - role: sunfoxcz.elasticsearch
-      elasticsearch_version: 7.x # optional
-      elasticsearch_jvm_options:
-        - Xms2g
-        - Xmx2g
+      elasticsearch_version: 8.x # 8.x is default
+      elasticsearch_jvm_options: # optional
+        Xms: Xms2g
+        Xmx: Xmx2g
 ```
 
 ## License
