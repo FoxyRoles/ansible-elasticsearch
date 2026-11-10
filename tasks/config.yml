@@ -1,0 +1,48 @@
+---
+
+- name: Read the existing Elasticsearch configuration
+  ansible.builtin.slurp:
+    src: /etc/elasticsearch/elasticsearch.yml
+  register: elasticsearch_existing_config
+  no_log: true
+
+- name: Configure security and the HTTP bind address
+  ansible.builtin.lineinfile:
+    path: /etc/elasticsearch/elasticsearch.yml
+    regexp: '^{{ item.key | regex_escape }}:'
+    line: '{{ item.key }}: {{ item.value | to_json }}'
+  loop:
+    - key: http.host
+      value: '{{ elasticsearch_http_host }}'
+    - key: xpack.security.enabled
+      value: '{{ elasticsearch_security_enabled | bool }}'
+    - key: xpack.security.enrollment.enabled
+      value: '{{ elasticsearch_security_enrollment_enabled | bool }}'
+  notify: restart elasticsearch
+
+# Preserve certificate settings and change only the enabled value in each block.
+- name: Configure existing nested SSL settings
+  ansible.builtin.replace:
+    path: /etc/elasticsearch/elasticsearch.yml
+    regexp: '^(xpack\.security\.{{ item.name }}\.ssl:[ \t]*(?:#[^\n]*)?\n(?:(?:[ \t]+[^\n]*|#[^\n]*|[ \t]*)\n)*?[ \t]+enabled:)[^\n]*$'
+    replace: '\g<1> {{ item.enabled | bool | ternary("true", "false") }}'
+  loop: &ssl_settings
+    - name: http
+      enabled: '{{ elasticsearch_security_http_ssl_enabled }}'
+    - name: transport
+      enabled: '{{ elasticsearch_security_transport_ssl_enabled }}'
+  when: >-
+    'xpack.security.' ~ item.name ~ '.ssl' in
+    (elasticsearch_existing_config.content | b64decode | from_yaml | default({}, true))
+  notify: restart elasticsearch
+
+- name: Configure flat SSL settings when no nested block exists
+  ansible.builtin.lineinfile:
+    path: /etc/elasticsearch/elasticsearch.yml
+    regexp: '^xpack\.security\.{{ item.name }}\.ssl\.enabled:'
+    line: 'xpack.security.{{ item.name }}.ssl.enabled: {{ item.enabled | bool | ternary("true", "false") }}'
+  loop: *ssl_settings
+  when: >-
+    'xpack.security.' ~ item.name ~ '.ssl' not in
+    (elasticsearch_existing_config.content | b64decode | from_yaml | default({}, true))
+  notify: restart elasticsearch

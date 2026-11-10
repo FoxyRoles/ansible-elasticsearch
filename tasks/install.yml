@@ -1,13 +1,7 @@
 ---
 
-- name: elasticsearch package present
-  apt:
-    name: "elasticsearch"
-    state: present
-
-- name: elasticsearch service started and enabled
-  systemd:
+- name: Ensure Elasticsearch is installed
+  ansible.builtin.apt:
     name: elasticsearch
-    daemon_reload: yes
-    state: started
-    enabled: yes
+    state: present
+    policy_rc_d: 101

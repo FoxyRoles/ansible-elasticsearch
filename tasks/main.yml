@@ -1,5 +1,22 @@
 ---
 
-- import_tasks: repository.yml
-- import_tasks: install.yml
-- import_tasks: jvm_options.yml
+- name: Configure Elasticsearch repository
+  ansible.builtin.import_tasks: repository.yml
+
+- name: Install Elasticsearch
+  ansible.builtin.import_tasks: install.yml
+
+- name: Configure JVM options
+  ansible.builtin.import_tasks: jvm_options.yml
+
+- name: Configure Elasticsearch
+  ansible.builtin.import_tasks: config.yml
+
+- name: Apply configuration before starting Elasticsearch
+  ansible.builtin.meta: flush_handlers
+
+- name: Ensure Elasticsearch is started and enabled
+  ansible.builtin.systemd_service:
+    name: elasticsearch
+    state: started
+    enabled: true

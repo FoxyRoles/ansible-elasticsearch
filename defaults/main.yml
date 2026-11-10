@@ -1,3 +1,11 @@
 ---
 
 elasticsearch_version: 8.x
+elasticsearch_jvm_options: {}
+
+# Keep unsecured HTTP local unless explicitly configured otherwise.
+elasticsearch_http_host: 127.0.0.1
+elasticsearch_security_enabled: false
+elasticsearch_security_enrollment_enabled: false
+elasticsearch_security_http_ssl_enabled: false
+elasticsearch_security_transport_ssl_enabled: false

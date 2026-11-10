@@ -1,12 +1,26 @@
 ---
 
-- name: Ensure JVM options are set
-  lineinfile:
+- name: Remove configured JVM overrides from the package configuration
+  ansible.builtin.lineinfile:
     path: /etc/elasticsearch/jvm.options
-    regexp: "^\\-{{ item.key }}"
-    line: "-{{ item.value }}"
-  with_dict:
-   - "{{ elasticsearch_jvm_options }}"
-  when: elasticsearch_jvm_options is defined
-  notify:
-   - restart elasticsearch
+    regexp: '^\-{{ item.key | regex_escape }}'
+    state: absent
+  loop: "{{ elasticsearch_jvm_options | dict2items }}"
+  notify: restart elasticsearch
+
+- name: Configure JVM overrides in a dedicated options file
+  ansible.builtin.template:
+    src: jvm.options.j2
+    dest: /etc/elasticsearch/jvm.options.d/ansible.options
+    owner: root
+    group: elasticsearch
+    mode: '0640'
+  when: elasticsearch_jvm_options | length > 0
+  notify: restart elasticsearch
+
+- name: Remove the managed options file when no overrides are configured
+  ansible.builtin.file:
+    path: /etc/elasticsearch/jvm.options.d/ansible.options
+    state: absent
+  when: elasticsearch_jvm_options | length == 0
+  notify: restart elasticsearch

@@ -1,0 +1,4 @@
+# Managed by Ansible.
+{% for option in elasticsearch_jvm_options | dictsort %}
+-{{ option.1 }}
+{% endfor %}
